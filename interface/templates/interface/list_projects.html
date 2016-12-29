@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block body %}
+
+  <div>
+    <button id="create-new-project-btn" type="button">Create New Project</button>
+  </div>
+
+  {% if projects %}
+    {% for project in projects %}
+      <div>
+        <!-- Project header -->
+        <div>
+          <div>{{ project.name }}</div>
+          <div>
+            <a href="/projects/{{ project.pk }}/edit">Edit</a>
+            <a href="/projects/{{ project.pk }}/delete">Delete</a>
+          </div>
+        </div>
+
+        <!-- Project Pull Requests -->
+        {% if project.pull_requests.count > 0 %}
+          {% for pull_request in project.pull_requests.all %}
+            {% include 'interface/shared/pull_request.html' %}
+          {% endfor %}
+          <div>
+            <button type="button">Merge all</button>
+          </div>
+        {% else %}
+          <div>
+            This project does not have PRs yet. Click "Edit" to add them.
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% else %}
+    <div>
+      You don't have any project yet. You can click "Create new project" to add one.
+    </div>
+  {% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+  <script type="application/javascript">
+    $(document).ready(function () {
+      $('#create-new-project-btn').click(function () {
+        let url = `/projects/new${location.search}`;
+        window.open(url, '_self');
+      });
+    })
+  </script>
+{% endblock %}

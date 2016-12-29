@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block body %}
+  <h3>
+    Your Github Organizations
+  </h3>
+  <div>
+    <div>
+      <a href="/projects">Personal</a>
+    </div>
+    {% for org in organizations %}
+      <div>
+        <a href="/projects?organizationId={{ org.id }}">{{ org.name }}</a>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}
