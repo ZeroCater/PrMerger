@@ -1,17 +1,61 @@
 {% extends 'base.html' %}
 
 {% block body %}
-  <h3>
-    Your Github Organizations
-  </h3>
-  <div>
-    <div>
-      <a href="/projects">Personal</a>
+  <div class="ui text menu">
+    <div class="ui item">
+      <h1 class="ui header">
+        Organizations
+      </h1>
+    </div>
+  </div>
+  <div class="ui relaxed huge celled selection list">
+    <div data-value="0" class="ui item organization" style="color: #4183C4">
+      Personal
+{#      <div class="right floated content">#}
+{#        <button class="ui teal basic button">#}
+{#          View Projects#}
+{#        </button>#}
+{#      </div>#}
+{#      <div class="content">#}
+{#        <span>Personal</span>#}
+{#      </div>#}
     </div>
     {% for org in organizations %}
-      <div>
-        <a href="/projects?organizationId={{ org.id }}">{{ org.name }}</a>
+      <div data-value="{{ org.id }}" class="ui item organization" style="color: #4183C4">
+        {{ org.name }}
+{#        <div class="right floated content">#}
+{#          <button class="ui teal basic button">#}
+{#            View Projects#}
+{#          </button>#}
+{#        </div>#}
+{#        <div class="content">#}
+{#          <span>{{ org.name }}</span>#}
+{#        </div>#}
       </div>
     {% endfor %}
   </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script type="text/javascript">
+    $.ajaxSetup({
+      beforeSend: function (xhr, settings) {
+        xhr.setRequestHeader("X-CSRFToken", Cookies.get('csrftoken'));
+      }
+    });
+    $(document).ready(function () {
+      $('div.ui.item.organization').click(function (event) {
+        let payload = { organizationId: $(event.target).attr('data-value')};
+        let url = '{% url 'interface:update-session-organization' %}';
+        $.post(url, payload, function (data, status) {
+          if (status !== 'success'){
+            window.alert(data);
+          }
+          else{
+            window.open('{% url 'interface:project-list' %}', '_self');
+          }
+        });
+      });
+    })
+  </script>
 {% endblock %}

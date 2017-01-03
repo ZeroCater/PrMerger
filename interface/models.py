@@ -81,6 +81,7 @@ class PullRequest(models.Model):
     is_merged = models.BooleanField(default=False)
     opened_by = models.CharField(max_length=200)
     base = models.CharField(max_length=200)
+    url = models.URLField(max_length=200)
 
     def __unicode__(self):
         return u'repo={}, title={}'.format(self.repository, self.title)

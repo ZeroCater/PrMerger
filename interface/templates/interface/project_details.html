@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block body %}
+  <div class="ui text menu">
+    <div class="ui item">
+      <div class="ui large breadcrumb">
+        <a class="section" href="{% url 'interface:organization-list' %}">Organizations</a>
+        <i class="right angle icon divider"></i>
+        <a class="section" href="{% url 'interface:project-list' %}">Projects</a>
+        <i class="right angle icon divider"></i>
+        <div class="active section">
+          {% if form.instance.pk %}
+            {{ form.instance.name }}
+          {% else %}
+            New
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <form class="ui form" method="post">
+    {% csrf_token %}
+    <!-- Project name -->
+    <div class="field">
+      {% if form.name.errors %}
+        <div class="ui negative message">
+          {{ form.name.errors }}
+        </div>
+      {% endif %}
+      <label for="{{ form.name.id_for_label }}">Name</label>
+      {{ form.name }}
+    </div>
+
+    <!-- Project PRs -->
+    <div class="field">
+      <!-- Existing PRs -->
+      <label>Pull Requests</label>
+      <div id="existing-prs" class="ui card" style="width: 100%;">
+        <div class="content">
+          <div class="description">
+            {% for pull_request in pull_requests %}
+              <div id="existing-prs-{{ pull_request.id }}" class="ui grid">
+                <input type="hidden" name="pull_requests" value="{{ pull_request.id }}">
+                <div class="fifteen wide column">
+                  {% include 'interface/shared/pull_request.html' %}
+                </div>
+                <div class="one wide column" style="display: flex; align-items: center;">
+                  <i id="existing-prs-{{ pull_request.id }}-delete-btn" class="ui red big remove circle icon" style="cursor: pointer;"></i>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="extra content">
+          <!-- Adding a new PR button -->
+          <div id="new-pr-btn-container">
+              <button id="new-pr-btn" type="button" class="ui tiny basic button">New Pull Request</button>
+          </div>
+
+          <!-- Front-end only form to add a new PR -->
+          <div id="new-pr-form" hidden class="ui form">
+            <!-- Repository dropdown box -->
+            <div class="field">
+              <label>Repository</label>
+              <select id="new-pr-repositories" class="ui fluid search selection dropdown">
+                <option value="" selected="selected">Select a repository</option>
+                {% for repository in repositories %}
+                  <option value="{{ repository.id }}">{{ repository.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Pull requests drop-down box -->
+            <div class="field">
+              <label>Pull Request</label>
+              {# Options will be loaded dynamically once user has selected the repo #}
+              <select id="new-pr-pull-requests" class="ui fluid search selection dropdown">
+                <option value="" selected="selected">Select a pull request</option>
+              </select>
+            </div>
+
+            <!-- Add button -->
+            <div class="field">
+              <button class="ui tiny basic button" id="new-pr-add-btn" type="button">Add</button>
+              <button class="ui tiny basic button" id="new-pr-cancel-btn" type="button">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+
+    <!-- Save Button -->
+    <button class="ui teal basic button" type="submit">Save Changes</button>
+
+  </form>
+{% endblock %}
+
+{% block extra_js %}
+  <script type="application/javascript">
+    $(document).ready(function () {
+      $('#new-pr-btn').click(function () {
+        $('#new-pr-btn-container').toggle('hidden');
+        $('#new-pr-form').toggle('hidden');
+      });
+      $('#new-pr-repositories').dropdown().change(function () {
+        let repoId = $('#new-pr-repositories option:selected').val();
+        let url = `/api/repos/${repoId}/pull_requests`;
+        $.get(url, function (data) {
+          $('#new-pr-pull-requests').html(data);
+        })
+      });
+      $('#new-pr-pull-requests').dropdown();
+      $('#new-pr-add-btn').click(function () {
+        let prId = $('#new-pr-pull-requests option:selected').val();
+        if(prId){
+          // Check if this PR is not already existing on this project
+          let prSelected = false;
+          $('input[name="pull_requests"]').each(function (i, e) {
+            if(parseInt(e.value) == parseInt(prId)){
+              prSelected = true;
+              return false;
+            }
+          });
+
+          if(prSelected){
+            window.alert('The selected PR is already included in this project.')
+          }
+          else{
+            let url = `/api/pull_requests/${prId}/template`;
+            $.get(url, function (data) {
+              let html = `<div  id="existing-prs-${prId}" class="ui grid" style="margin-top: 0px;">` +
+                           `<input type="hidden" name="pull_requests" value="${prId}">` +
+                           '<div class="fifteen wide column">' +
+                              data +
+                           '</div>' +
+                           '<div class="one wide column" style="display: flex; align-items: center;">' +
+                              `<i id="existing-prs-${prId}-delete-btn" class="ui red big remove circle icon" style="cursor: pointer;"></i>` +
+                           '</div>' +
+                         '</div>';
+
+              $('#existing-prs > div.content > div.description').append(html);
+              $(`#existing-prs-${prId}-delete-btn`).click(function () {
+                $(`#existing-prs-${prId}`).remove();
+              });
+              $('#new-pr-btn-container').toggle('hidden');
+              $('#new-pr-form').toggle('hidden');
+            })
+          }
+        }
+        else{
+          $('#new-pr-errors').text('No PR was selected');
+        }
+      });
+      $('#new-pr-cancel-btn').click(function () {
+        $('#new-pr-btn-container').toggle('hidden');
+        $('#new-pr-form').toggle('hidden');
+      });
+      $('input[name="pull_requests"]').each(function (i, e) {
+        let prId = e.value;
+        $(`#existing-prs-${prId}-delete-btn`).click(function () {
+          $(`#existing-prs-${prId}`).remove();
+        });
+      });
+    })
+  </script>
+{% endblock %}

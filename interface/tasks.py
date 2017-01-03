@@ -29,6 +29,7 @@ def fetch_additional_github_user_data(user_id):
                     'comments': pr.comments,
                     'is_merged': pr.is_merged(),
                     'opened_by': pr.user.login,
-                    'base': pr.base.ref
+                    'base': pr.base.ref,
+                    'url': pr.html_url
                 }
                 PullRequest.objects.get_or_create(identifier=pr.id, repository=result[0], defaults=defaults)

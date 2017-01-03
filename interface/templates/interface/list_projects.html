@@ -1,52 +1,95 @@
 {% extends 'base.html' %}
 
 {% block body %}
-
-  <div>
-    <button id="create-new-project-btn" type="button">Create New Project</button>
+  <div class="ui text menu">
+    <div class="ui item">
+      <div class="ui large breadcrumb">
+        <a class="section" href="{% url 'interface:organization-list' %}">Organizations</a>
+        <i class="right angle icon divider"></i>
+        <div class="active section">{{ organization_name }}</div>
+      </div>
+    </div>
   </div>
 
-  {% if projects %}
-    {% for project in projects %}
+  <div class="ui two column grid">
+    <div class="column">
       <div>
-        <!-- Project header -->
-        <div>
-          <div>{{ project.name }}</div>
-          <div>
-            <a href="/projects/{{ project.pk }}/edit">Edit</a>
-            <a href="/projects/{{ project.pk }}/delete">Delete</a>
+        <span style="margin-right: .5em;">Status</span>
+        <div class="ui inline dropdown">
+          <div class="text">
+            {{ status|capfirst }}
+          </div>
+          <i class="dropdown icon"></i>
+          <div class="menu">
+            <div class="item">
+              Pending
+            </div>
+            <div class="item">
+              Merged
+            </div>
           </div>
         </div>
-
-        <!-- Project Pull Requests -->
-        {% if project.pull_requests.count > 0 %}
-          {% for pull_request in project.pull_requests.all %}
-            {% include 'interface/shared/pull_request.html' %}
-          {% endfor %}
-          <div>
-            <button type="button">Merge all</button>
-          </div>
-        {% else %}
-          <div>
-            This project does not have PRs yet. Click "Edit" to add them.
-          </div>
-        {% endif %}
       </div>
-    {% endfor %}
-  {% else %}
-    <div>
-      You don't have any project yet. You can click "Create new project" to add one.
     </div>
-  {% endif %}
+    <div class="column">
+      <button class="tiny ui right floated teal button" id="create-new-project-btn" type="button">Create New Project</button>
+    </div>
+  </div>
+
+  <div class="ui one column grid">
+    <div class="column">
+      {% if projects %}
+        {% for project in projects %}
+          <div class="ui card" style="width: 100%;">
+            <!-- Project header -->
+            <div class="content">
+              <a class="right floated mini ui basic button" href="{% url 'interface:delete-project' project.pk %}">Delete</a>
+              <a class="right floated mini ui basic button" href="{% url 'interface:edit-project' project.pk %}">Edit</a>
+              <div class="header">{{ project.name }}</div>
+              <div class="description" style="padding-top: .6em;">
+                <!-- Project Pull Requests -->
+                {% if project.pull_requests.count > 0 %}
+                  {% for pull_request in project.pull_requests.all %}
+                    {% include 'interface/shared/pull_request.html' %}
+                  {% endfor %}
+                {% else %}
+                  <p>
+                    This project does not have PRs yet. Click "Edit" to add them.
+                  </p>
+                {% endif %}
+              </div>
+            </div>
+            <div class="extra content">
+              {% if project.pull_requests.count > 0 %}
+                <a class="right floated mini ui teal basic button" href="{% url 'interface:merge-project' project.pk %}">Merge</a>
+              {% else %}
+                <button type="button" class="right floated mini ui teal basic button" disabled="disabled">Merge</button>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p>
+          You don't have any project yet. You can click "Create new project" to add one.
+        </p>
+      {% endif %}
+    </div>
+  </div>
 
 {% endblock %}
 
 {% block extra_js %}
-  <script type="application/javascript">
+  <script type="text/javascript">
     $(document).ready(function () {
       $('#create-new-project-btn').click(function () {
         let url = `/projects/new${location.search}`;
         window.open(url, '_self');
+      });
+      $('.ui.dropdown').dropdown({
+        onChange: function (value, text, $selectedItem) {
+          let url = `${location.pathname}?status=${value}`;
+          window.open(url, '_self');
+        }
       });
     })
   </script>
