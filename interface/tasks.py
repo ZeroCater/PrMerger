@@ -16,9 +16,10 @@ def fetch_additional_github_user_data(user_id):
 
         defaults = {
             'owner': owner,
-            'name': repo.full_name
+            'name': repo.name,
+            'full_name': repo.full_name,
         }
-        result = Repository.objects.get_or_create(identifier=repo.id, defaults=defaults)
+        result = Repository.objects.update_or_create(identifier=repo.id, defaults=defaults)
 
         pull_requests = repo.get_pulls()
         if pull_requests:
@@ -30,6 +31,7 @@ def fetch_additional_github_user_data(user_id):
                     'is_merged': pr.is_merged(),
                     'opened_by': pr.user.login,
                     'base': pr.base.ref,
-                    'url': pr.html_url
+                    'url': pr.html_url,
+                    'branch': pr.head.ref
                 }
-                PullRequest.objects.get_or_create(identifier=pr.id, repository=result[0], defaults=defaults)
+                PullRequest.objects.update_or_create(identifier=pr.id, repository=result[0], defaults=defaults)

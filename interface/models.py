@@ -41,18 +41,19 @@ class Repository(models.Model):
     owner = GenericForeignKey('owner_type', 'owner_id')
     identifier = models.PositiveIntegerField(unique=True)
     name = models.CharField(max_length=200)
+    full_name = models.CharField(max_length=300)
 
     def __unicode__(self):
-        return unicode(self.name)
+        return unicode(self.full_name)
 
 
 class Project(models.Model):
-    DELETED = 'deleted'
+    FAILED = 'failed'
     PENDING = 'pending'
     MERGED = 'merged'
 
     STATUSES = (
-        (DELETED, DELETED),
+        (FAILED, FAILED),
         (PENDING, PENDING),
         (MERGED, MERGED)
     )
@@ -82,6 +83,7 @@ class PullRequest(models.Model):
     opened_by = models.CharField(max_length=200)
     base = models.CharField(max_length=200)
     url = models.URLField(max_length=200)
+    branch = models.CharField(max_length=200)
 
     def __unicode__(self):
         return u'repo={}, title={}'.format(self.repository, self.title)

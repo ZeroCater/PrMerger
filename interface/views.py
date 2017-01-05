@@ -4,9 +4,12 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import render
 from django.urls import reverse
-from django.views.generic import ListView, FormView
+from django.views.generic import ListView, DetailView, UpdateView, CreateView
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+
+from github import Github
+from github.GithubException import GithubException
 
 from interface.forms import ProjectForm
 from interface.utils import (
@@ -15,7 +18,7 @@ from interface.utils import (
 from interface.models import Repository, Organization, PullRequest, Project
 
 
-class ListOrganizationView(LoginRequiredMixin, ListView):
+class OrganizationListView(LoginRequiredMixin, ListView):
     template_name = 'interface/list_organizations.html'
     context_object_name = 'organizations'
 
@@ -24,7 +27,7 @@ class ListOrganizationView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class ListProjectView(LoginRequiredMixin, ListView):
+class ProjectListView(LoginRequiredMixin, ListView):
     template_name = 'interface/list_projects.html'
     context_object_name = 'projects'
 
@@ -36,27 +39,15 @@ class ListProjectView(LoginRequiredMixin, ListView):
         org_id = self.request.session.get('organization_id', DEFAULT_ORG_ID)
         organization_name = Organization.objects.get(pk=org_id).name if org_id != DEFAULT_ORG_ID else DEFAULT_ORG_NAME
         status = self.request.GET.get('status', 'pending')
-        return super(ListProjectView, self).get_context_data(organization_name=organization_name, status=status)
+        return super(ProjectListView, self).get_context_data(organization_name=organization_name, status=status)
 
 
-class ProjectView(LoginRequiredMixin, FormView):
+class ProjectViewMixin(object):
     form_class = ProjectForm
     template_name = 'interface/project_details.html'
     queryset = Project.objects.all()
     permission_denied_message = 'You are not authorized to view this project'
     pk_url_kwarg = 'pk'
-
-    def get(self, request, *args, **kwargs):
-        context = {
-            'repositories': self.get_repositories(),
-            'pull_requests': self.object.pull_requests.all() if self.object else [],
-        }
-        return self.render_to_response(self.get_context_data(**context))
-
-    def get_form_kwargs(self):
-        kwargs = super(ProjectView, self).get_form_kwargs()
-        kwargs.setdefault('instance', self.object)
-        return kwargs
 
     def get_object(self):
         pk = self.kwargs.get(self.pk_url_kwarg)
@@ -75,63 +66,114 @@ class ProjectView(LoginRequiredMixin, FormView):
                 return self.handle_no_permission()
             return obj
 
-    def get_repositories(self):
-        return project_repos_queryset(self.object) if self.object else user_repos_queryset(self.request)
+    def get_success_url(self):
+        redirect_url = reverse('interface:project-list')
+        return redirect_url
+
+    def form_invalid(self, form):
+        context = {
+            'form': form,
+            'pull_requests': PullRequest.objects.filter(id__in=self.request.POST.getlist('pull_requests')).all(),
+        }
+        return self.render_to_response(self.get_context_data(**context))
+
+    def update_included_pull_requests(self, project):
+        selected_pr_ids = self.request.POST.getlist('pull_requests')
+        PullRequest.objects.filter(id__in=selected_pr_ids).update(project=project)
+        return HttpResponseRedirect(self.get_success_url())
+
+
+class ProjectCreateView(LoginRequiredMixin, ProjectViewMixin, CreateView):
+    def get_context_data(self, **kwargs):
+        if 'repositories' not in kwargs:
+            kwargs.setdefault('repositories', user_repos_queryset(self.request))
+        if 'pull_requests' not in kwargs:
+            kwargs.setdefault('pull_requests', [])
+        return super(ProjectCreateView, self).get_context_data(**kwargs)
+
+    def form_valid(self, form):
+        organization_id = self.request.session.get('organization_id', DEFAULT_ORG_ID)
+        if organization_id != DEFAULT_ORG_ID:
+            owner = Organization.objects.get(id=organization_id)
+        else:
+            owner = self.request.user
+
+        try:
+            project = form.save(commit=False)
+            project.owner = owner
+            project.save()
+        except IntegrityError as error:
+            # TODO: this error is not clear. Clarify which organization this is.
+            form._errors['name'] = error.message
+            return self.form_invalid(form)
+        else:
+            self.update_included_pull_requests(project)
+            return HttpResponseRedirect(self.get_success_url())
+
+
+class ProjectUpdateView(LoginRequiredMixin, ProjectViewMixin, UpdateView):
+    def get_context_data(self, **kwargs):
+        if 'repositories' not in kwargs:
+            kwargs.setdefault('repositories', project_repos_queryset(self.object))
+        if 'pull_requests' not in kwargs:
+            kwargs.setdefault('pull_requests', self.object.pull_requests.all())
+        return super(ProjectUpdateView, self).get_context_data(**kwargs)
 
     def form_valid(self, form):
         try:
-            if form.instance.pk:
-                project = form.save(commit=True)
-                project.pull_requests.update(project=None)
-            else:
-                organization_id = self.request.session.get('organization_id', DEFAULT_ORG_ID)
-                if organization_id != DEFAULT_ORG_ID:
-                    owner = Organization.objects.get(id=organization_id)
-                else:
-                    owner = self.request.user
-
-                project = form.save(commit=False)
-                project.owner = owner
-                project.save()
+            project = form.save(commit=True)
         except IntegrityError as error:
             # TODO: this error is not clear. Clarify which organization this is.
             form._errors['name'] = error.message
             return self.form_invalid(form=form)
         else:
-            selected_pr_ids = self.request.POST.getlist('pull_requests')
-            PullRequest.objects.filter(id__in=selected_pr_ids).update(project=project)
+            project.pull_requests.update(project=None)
+            self.update_included_pull_requests(project)
             return HttpResponseRedirect(self.get_success_url())
 
-    def form_invalid(self, form):
-        context = {
-            'form': form,
-            'repositories': self.get_repositories(),
-            'pull_requests': PullRequest.objects.filter(id__in=self.request.POST.getlist('pull_requests')).all(),
+
+class ProjectDeleteView(LoginRequiredMixin, ProjectViewMixin, DetailView):
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.pull_requests.update(project=None)
+        self.object.delete()
+        redirect_url = self.get_success_url()
+        return HttpResponseRedirect(redirect_url)
+
+
+class ProjectMergeView(LoginRequiredMixin, ProjectViewMixin, DetailView):
+    template_name = 'interface/project_errors.html'
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        github = Github(request.user.github_login, request.user.github_access_token)
+        errors = []
+
+        for pr in self.object.pull_requests.prefetch_related('repository').all():
+            try:
+                repo = github.get_user().get_repo(pr.repository.name)
+                pull = repo.get_pull(pr.number)
+                pull.merge()
+
+                pr.is_merged = True
+                pr.save()
+            except GithubException as error:
+                errors.append({'pull_request': pr, 'error': error.message if error.message else error})
+
+        if not errors:
+            self.object.status = Project.MERGED
+            self.object.save()
+            redirect_url = self.get_success_url()
+            return HttpResponseRedirect(redirect_url)
+
+        self.object.status = Project.FAILED
+        self.object.save()
+        kwargs = {
+            'project': self.object,
+            'message': 'Got some unexpected errors while merging pull requests. Please review the errors below.',
+            'errors': errors
         }
-        return self.render_to_response(self.get_context_data(**context))
-
-    def get_success_url(self):
-        redirect_url = reverse('interface:project-list')
-        return redirect_url
-
-    @property
-    def object(self):
-        if not hasattr(self, '_object'):
-            setattr(self, '_object', self.get_object())
-        return self._object
-
-
-@login_required
-def delete_project_view(request, pk):
-    project = Project.objects.get(pk=pk)
-    project.delete()
-    redirect_url = reverse('interface:project-list')
-    return HttpResponseRedirect(redirect_url)
-
-
-@login_required
-def merge_project_view(request):
-    pass
+        return self.render_to_response(self.get_context_data(**kwargs))
 
 
 @login_required
@@ -156,7 +198,7 @@ def update_session_organization(request):
 
 @login_required
 def get_repo_pull_request_options(request, pk):
-    pull_requests = Repository.objects.get(pk=pk).pull_requests.all()
+    pull_requests = Repository.objects.get(pk=pk).pull_requests.filter(project__isnull=True)
     options = [
         '<option value={}>{}</option>'.format(pr.pk, pr.title)
         for pr in pull_requests

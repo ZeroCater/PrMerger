@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block body %}
+  <div class="ui text menu">
+    <div class="ui item">
+      <div class="ui large breadcrumb">
+        <a class="section" href="{% url 'interface:organization-list' %}">Organizations</a>
+        <i class="right angle icon divider"></i>
+        <a class="section" href="{% url 'interface:project-list' %}">Projects</a>
+        <i class="right angle icon divider"></i>
+        <a class="section" href="{% url 'interface:edit-project' project.id %}">{{ project.name }}</a>
+        <i class="right angle icon divider"></i>
+        <div class="active section">
+          Error
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="ui red message">
+    {{ message }}
+  </p>
+  <div class="ui grid">
+    {% for item in errors %}
+      <div class="row">
+        <div class="column">
+          <div class="ui top attached segment">
+            {% include 'interface/shared/pull_request.html' with pull_request=item.pull_request %}
+          </div>
+          <div class="ui bottom attached red message">{{ item.error }}</div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}

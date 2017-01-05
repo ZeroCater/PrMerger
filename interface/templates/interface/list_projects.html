@@ -27,6 +27,9 @@
             <div class="item">
               Merged
             </div>
+            <div class="item">
+              Failed
+            </div>
           </div>
         </div>
       </div>
@@ -70,7 +73,10 @@
         {% endfor %}
       {% else %}
         <p>
-          You don't have any project yet. You can click "Create new project" to add one.
+          You don't have any projects in {{ status }} status.
+          {% if status == 'pending' %}
+            You can click "Create New Project" to add one.
+          {% endif %}
         </p>
       {% endif %}
     </div>

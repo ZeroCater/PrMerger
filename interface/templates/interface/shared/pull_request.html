@@ -6,12 +6,12 @@
     <a class="link header" style="color: #666666" href="{{ pull_request.url }}">{{ pull_request.title }}</a>
     <div class="description" style="color: grey;">
       <div>
-        <span style="font-weight: bold;">{{ pull_request.repository.name }} </span>
+        <span style="font-weight: bold;">{{ pull_request.repository.full_name }} </span>
         #{{ pull_request.number }} opened by {{ pull_request.opened_by }}
       </div>
       <div>
         merge
-        <span style="background-color: #d4e4f7;padding: 1px 6px;">{{ pull_request.title }}</span>
+        <span style="background-color: #d4e4f7;padding: 1px 6px;">{{ pull_request.branch }}</span>
         into
         <span style="background-color: #d4e4f7;padding: 1px 6px;">{{ pull_request.base }}</span></div>
     </div>
