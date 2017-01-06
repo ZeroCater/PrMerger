@@ -28,7 +28,7 @@
           {% if user.is_authenticated %}
             <a class="ui huge blue-grey button" href="{% url 'interface:organization-list' %}">Go to my Dashboard</a>
           {% else %}
-            <a class="ui huge violet button" href="{% url 'social:begin' 'github' %}">
+            <a class="ui huge blue-grey button" href="{% url 'social:begin' 'github' %}">
               <i class="icon github"></i>
               Sign Up With Github
             </a>
