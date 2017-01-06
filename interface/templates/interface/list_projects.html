@@ -1,4 +1,9 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+  <link rel="stylesheet" type="text/css" href="{% static 'css/pull_request.css' %}">
+{% endblock %}
 
 {% block left-menu-item %}
 
@@ -53,9 +58,11 @@
               <div class="description" style="padding-top: .6em;">
                 <!-- Project Pull Requests -->
                 {% if project.pull_requests.count > 0 %}
-                  {% for pull_request in project.pull_requests.all %}
-                    {% include 'interface/shared/pull_request.html' %}
-                  {% endfor %}
+                  <div class="ui items">
+                    {% for pull_request in project.pull_requests.all %}
+                      {% include 'interface/shared/pull_request.html' %}
+                    {% endfor %}
+                  </div>
                 {% else %}
                   <p>
                     This project does not have PRs yet. Click "Edit" to add them.

@@ -1,26 +1,23 @@
-<div class="ui card" style="width: 100%; box-shadow: none; border: 1px solid rgba(0,0,0,.05); background-color: rgba(0,0,0,.03); margin-bottom: 0px;">
+<div class="item" style="background-color: rgba(0,0,0,.03); border: 1px solid rgba(0,0,0,.05); padding: 20px;">
+  <div style="color: grey;">
+    {% if pull_request.is_merged %}
+      <i class="left floated large violet icon ion-pull-request"></i>
+    {% else %}
+      <i class="left floated large green icon ion-pull-request"></i>
+    {% endif %}
+  </div>
   <div class="content">
     <i class="right floated">{{ pull_request.comments }}</i>
     <i class="right floated comments icon"></i>
-    <i class="left floated like icon"></i>
     <a class="link header" style="color: #666666" href="{{ pull_request.url }}">{{ pull_request.title }}</a>
-    <div class="description" style="color: grey;">
+    <div class="description" style="margin-top: 0px; color: grey;">
       <div>
-        <span style="font-weight: bold;">{{ pull_request.repository.full_name }} </span>
-        #{{ pull_request.number }} opened by {{ pull_request.opened_by }}
+        <span style="font-weight: bold;">{{ pull_request.repository.full_name }} </span> #{{ pull_request.number }} opened by {{ pull_request.opened_by }}
       </div>
       <div>
-        merge
-        <span style="background-color: #d4e4f7;padding: 1px 6px;">{{ pull_request.branch }}</span>
-        into
-        <span style="background-color: #d4e4f7;padding: 1px 6px;">{{ pull_request.base }}</span></div>
+        merge <span style="background-color: #d4e4f7;padding: 1px 6px;">{{ pull_request.branch }}</span>
+        into <span style="background-color: #d4e4f7;padding: 1px 6px;">{{ pull_request.base }}</span>
+      </div>
     </div>
   </div>
 </div>
-
-
-<style>
-  .ui.card a.link.header:hover {
-    color: #1e70bf !important;
-  }
-</style>

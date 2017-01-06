@@ -1,4 +1,9 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+  <link rel="stylesheet" type="text/css" href="{% static 'css/pull_request.css' %}">
+{% endblock %}
 
 {% block left-menu-item %}
   <div class="ui large breadcrumb">
@@ -42,7 +47,9 @@
               <div id="existing-prs-{{ pull_request.id }}" class="ui grid">
                 <input type="hidden" name="pull_requests" value="{{ pull_request.id }}">
                 <div class="fifteen wide column">
-                  {% include 'interface/shared/pull_request.html' %}
+                  <div class="ui items">
+                    {% include 'interface/shared/pull_request.html' %}
+                  </div>
                 </div>
                 <div class="one wide column" style="display: flex; align-items: center;">
                   <i id="existing-prs-{{ pull_request.id }}-delete-btn" class="ui red big remove circle icon" style="cursor: pointer;"></i>
@@ -134,7 +141,9 @@
               let html = `<div  id="existing-prs-${prId}" class="ui grid" style="margin-top: 0px;">` +
                            `<input type="hidden" name="pull_requests" value="${prId}">` +
                            '<div class="fifteen wide column">' +
-                              data +
+                              '<div class="ui items">' +
+                                data +
+                              '</div>' +
                            '</div>' +
                            '<div class="one wide column" style="display: flex; align-items: center;">' +
                               `<i id="existing-prs-${prId}-delete-btn" class="ui red big remove circle icon" style="cursor: pointer;"></i>` +
