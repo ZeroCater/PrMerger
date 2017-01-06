@@ -4,7 +4,7 @@ from interface import views
 
 
 urlpatterns = [
-    url(r'^$', TemplateView.as_view(template_name='welcome.html'), name='welcome'),
+    url(r'^$', TemplateView.as_view(template_name='home.html'), name='home'),
     url(r'^orgs$', views.OrganizationListView.as_view(), name='organization-list'),
     url(r'^projects$', views.ProjectListView.as_view(), name='project-list'),
     url(r'^projects/new$', views.ProjectCreateView.as_view(), name='new-project'),

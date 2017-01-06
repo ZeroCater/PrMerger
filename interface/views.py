@@ -180,7 +180,7 @@ class ProjectMergeView(LoginRequiredMixin, ProjectViewMixin, DetailView):
 @login_required
 def logout_user(request):
     logout(request)
-    redirect_url = reverse('interface:welcome')
+    redirect_url = reverse('interface:home')
     return HttpResponseRedirect(redirect_url)
 
 
