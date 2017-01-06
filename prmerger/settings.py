@@ -44,7 +44,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'coordinated_merges.urls'
+ROOT_URLCONF = 'prmerger.urls'
 
 TEMPLATES = [
     {
@@ -62,7 +62,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'coordinated_merges.wsgi.application'
+WSGI_APPLICATION = 'prmerger.wsgi.application'
 
 
 # Database
