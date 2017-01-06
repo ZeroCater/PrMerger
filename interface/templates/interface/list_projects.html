@@ -64,7 +64,7 @@
               </div>
             </div>
             <div class="extra content">
-              {% if project.pull_requests.count > 0 %}
+              {% if project.pull_requests.count > 0 and project.status != 'merged' %}
                 <a class="right floated mini ui teal basic button" href="{% url 'interface:merge-project' project.pk %}">Merge</a>
               {% else %}
                 <button type="button" class="right floated mini ui teal basic button" disabled="disabled">Merge</button>
