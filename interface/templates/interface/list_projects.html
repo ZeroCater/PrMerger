@@ -1,21 +1,22 @@
 {% extends 'base.html' %}
 
-{% block body %}
-  <div class="ui text menu">
-    <div class="ui item">
-      <div class="ui large breadcrumb">
-        <a class="section" href="{% url 'interface:organization-list' %}">Organizations</a>
-        <i class="right angle icon divider"></i>
-        <div class="active section">{{ organization_name }}</div>
-      </div>
-    </div>
+{% block left-menu-item %}
+
+  <div class="ui large breadcrumb">
+    <a class="section" href="{% url 'interface:organization-list' %}">Organizations</a>
+    <i class="right angle icon divider"></i>
+    <div class="active section">{{ organization_name }}</div>
   </div>
+
+{% endblock %}
+
+{% block body %}
 
   <div class="ui two column grid">
     <div class="column">
       <div>
         <span style="margin-right: .5em;">Status</span>
-        <div class="ui inline dropdown">
+        <div class="ui inline dropdown project-statuses">
           <div class="text">
             {{ status|capfirst }}
           </div>
@@ -91,7 +92,7 @@
         let url = `/projects/new${location.search}`;
         window.open(url, '_self');
       });
-      $('.ui.dropdown').dropdown({
+      $('.ui.dropdown.project-statuses').dropdown({
         onChange: function (value, text, $selectedItem) {
           let url = `${location.pathname}?status=${value}`;
           window.open(url, '_self');

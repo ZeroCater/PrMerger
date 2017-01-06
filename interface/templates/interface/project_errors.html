@@ -1,21 +1,20 @@
 {% extends 'base.html' %}
 
-{% block body %}
-  <div class="ui text menu">
-    <div class="ui item">
-      <div class="ui large breadcrumb">
-        <a class="section" href="{% url 'interface:organization-list' %}">Organizations</a>
-        <i class="right angle icon divider"></i>
-        <a class="section" href="{% url 'interface:project-list' %}">Projects</a>
-        <i class="right angle icon divider"></i>
-        <a class="section" href="{% url 'interface:edit-project' project.id %}">{{ project.name }}</a>
-        <i class="right angle icon divider"></i>
-        <div class="active section">
-          Error
-        </div>
-      </div>
+{% block left-menu-item %}
+  <div class="ui large breadcrumb">
+    <a class="section" href="{% url 'interface:organization-list' %}">Organizations</a>
+    <i class="right angle icon divider"></i>
+    <a class="section" href="{% url 'interface:project-list' %}">Projects</a>
+    <i class="right angle icon divider"></i>
+    <a class="section" href="{% url 'interface:edit-project' project.id %}">{{ project.name }}</a>
+    <i class="right angle icon divider"></i>
+    <div class="active section">
+      Error
     </div>
   </div>
+{% endblock %}
+
+{% block body %}
 
   <p class="ui red message">
     {{ message }}

@@ -1,36 +1,19 @@
 {% extends 'base.html' %}
 
+{% block left-menu-item %}
+  <h1 class="ui header">
+    Organizations
+  </h1>
+{% endblock %}
+
 {% block body %}
-  <div class="ui text menu">
-    <div class="ui item">
-      <h1 class="ui header">
-        Organizations
-      </h1>
-    </div>
-  </div>
   <div class="ui relaxed huge celled selection list">
     <div data-value="0" class="ui item organization" style="color: #4183C4">
       Personal
-{#      <div class="right floated content">#}
-{#        <button class="ui teal basic button">#}
-{#          View Projects#}
-{#        </button>#}
-{#      </div>#}
-{#      <div class="content">#}
-{#        <span>Personal</span>#}
-{#      </div>#}
     </div>
     {% for org in organizations %}
       <div data-value="{{ org.id }}" class="ui item organization" style="color: #4183C4">
         {{ org.name }}
-{#        <div class="right floated content">#}
-{#          <button class="ui teal basic button">#}
-{#            View Projects#}
-{#          </button>#}
-{#        </div>#}
-{#        <div class="content">#}
-{#          <span>{{ org.name }}</span>#}
-{#        </div>#}
       </div>
     {% endfor %}
   </div>

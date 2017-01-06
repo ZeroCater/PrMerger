@@ -5,6 +5,7 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidde
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic import ListView, DetailView, UpdateView, CreateView
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 
@@ -174,6 +175,13 @@ class ProjectMergeView(LoginRequiredMixin, ProjectViewMixin, DetailView):
             'errors': errors
         }
         return self.render_to_response(self.get_context_data(**kwargs))
+
+
+@login_required
+def logout_user(request):
+    logout(request)
+    redirect_url = reverse('interface:welcome')
+    return HttpResponseRedirect(redirect_url)
 
 
 @login_required
