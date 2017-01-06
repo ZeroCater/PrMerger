@@ -12,7 +12,7 @@ SECRET_KEY = 'a+nw*c#h3qv(a745=ekx72^1zg4_#44y$_od%p)pa42xz1&oi!'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = strtobool(os.environ.get('DEBUG', 'FALSE'))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 AUTH_USER_MODEL = 'interface.User'
 

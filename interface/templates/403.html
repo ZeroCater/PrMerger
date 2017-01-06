@@ -1,5 +1,22 @@
 {% extends 'base.html' %}
 
+{% block left-menu-item %}
+  <div class="ui large breadcrumb">
+    <a class="section" href="{% url 'interface:organization-list' %}">Organizations</a>
+    <i class="right angle icon divider"></i>
+    <a class="section" href="{% url 'interface:project-list' %}">Projects</a>
+    <i class="right angle icon divider"></i>
+    <div class="active section">
+      Forbidden
+    </div>
+  </div>
+{% endblock %}
+
 {% block body %}
-  {{ exception }}
+  <div class="ui red message">
+    <div class="header">Unauthorized access</div>
+    <p>
+      {{ exception }}
+    </p>
+  </div>
 {% endblock %}

@@ -43,7 +43,7 @@ class ProjectListView(LoginRequiredMixin, ListView):
         return super(ProjectListView, self).get_context_data(organization_name=organization_name, status=status)
 
 
-class ProjectViewMixin(object):
+class ProjectViewMixin(LoginRequiredMixin):
     form_class = ProjectForm
     template_name = 'interface/project_details.html'
     queryset = Project.objects.all()
@@ -84,7 +84,7 @@ class ProjectViewMixin(object):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class ProjectCreateView(LoginRequiredMixin, ProjectViewMixin, CreateView):
+class ProjectCreateView(ProjectViewMixin, CreateView):
     def get_context_data(self, **kwargs):
         if 'repositories' not in kwargs:
             kwargs.setdefault('repositories', user_repos_queryset(self.request))
@@ -112,7 +112,7 @@ class ProjectCreateView(LoginRequiredMixin, ProjectViewMixin, CreateView):
             return HttpResponseRedirect(self.get_success_url())
 
 
-class ProjectUpdateView(LoginRequiredMixin, ProjectViewMixin, UpdateView):
+class ProjectUpdateView(ProjectViewMixin, UpdateView):
     def get_context_data(self, **kwargs):
         if 'repositories' not in kwargs:
             kwargs.setdefault('repositories', project_repos_queryset(self.object))
@@ -133,7 +133,7 @@ class ProjectUpdateView(LoginRequiredMixin, ProjectViewMixin, UpdateView):
             return HttpResponseRedirect(self.get_success_url())
 
 
-class ProjectDeleteView(LoginRequiredMixin, ProjectViewMixin, DetailView):
+class ProjectDeleteView(ProjectViewMixin, DetailView):
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         self.object.pull_requests.update(project=None)
@@ -142,7 +142,7 @@ class ProjectDeleteView(LoginRequiredMixin, ProjectViewMixin, DetailView):
         return HttpResponseRedirect(redirect_url)
 
 
-class ProjectMergeView(LoginRequiredMixin, ProjectViewMixin, DetailView):
+class ProjectMergeView(ProjectViewMixin, DetailView):
     template_name = 'interface/project_errors.html'
 
     def get(self, request, *args, **kwargs):
