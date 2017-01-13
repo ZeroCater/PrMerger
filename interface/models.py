@@ -42,6 +42,7 @@ class Repository(models.Model):
     identifier = models.PositiveIntegerField(unique=True)
     name = models.CharField(max_length=200)
     full_name = models.CharField(max_length=300)
+    webhook_id = models.PositiveIntegerField(null=True, blank=True)
 
     def __unicode__(self):
         return unicode(self.full_name)
@@ -79,7 +80,7 @@ class PullRequest(models.Model):
     title = models.TextField()
     number = models.PositiveIntegerField()
     comments = models.PositiveIntegerField()
-    is_merged = models.BooleanField(default=False)
+    state = models.CharField(max_length=20)
     opened_by = models.CharField(max_length=200)
     base = models.CharField(max_length=200)
     url = models.URLField(max_length=200)

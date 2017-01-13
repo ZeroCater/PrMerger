@@ -6,10 +6,10 @@ from social_core import pipeline
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'a+nw*c#h3qv(a745=ekx72^1zg4_#44y$_od%p)pa42xz1&oi!'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'a+nw*c#h3qv(a745=ekx72^1zg4_#44y$_od%p)pa42xz1&oi!')
 
-# SECURITY WARNING: don't run with debug turned on in production!
+WEBHOOK_SECRET = os.environ.get('WEBHOOK_SECRET', '')
+
 DEBUG = strtobool(os.environ.get('DEBUG', 'FALSE'))
 
 ALLOWED_HOSTS = ['*']

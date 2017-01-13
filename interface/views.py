@@ -1,10 +1,16 @@
 from __future__ import unicode_literals
 
+import hashlib
+import hmac
+import json
+
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import render
 from django.urls import reverse
-from django.views.generic import ListView, DetailView, UpdateView, CreateView
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.views.generic import ListView, DetailView, UpdateView, CreateView, View
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -17,6 +23,7 @@ from interface.utils import (
     user_repos_queryset, user_projects_queryset, project_repos_queryset, DEFAULT_ORG_ID, DEFAULT_ORG_NAME
 )
 from interface.models import Repository, Organization, PullRequest, Project
+from prmerger import settings
 
 
 class OrganizationListView(LoginRequiredMixin, ListView):
@@ -219,3 +226,76 @@ def get_repo_pull_request_options(request, pk):
 def get_pull_request_template(request, pk):
     pull_request = PullRequest.objects.get(id=pk)
     return render(request, 'interface/shared/pull_request.html', {'pull_request': pull_request})
+
+
+class WebhookMixin(object):
+    def post(self, request, *args, **kwargs):
+        if 'HTTP_X_HUB_SIGNATURE' not in request.META:
+            return HttpResponse(status=403)
+
+        sig = unicode(request.META['HTTP_X_HUB_SIGNATURE'])
+        text = request.body
+
+        secret = str.encode(settings.WEBHOOK_SECRET)
+        signature = 'sha1=' + hmac.new(secret, msg=text, digestmod=hashlib.sha1).hexdigest()
+
+        if not hmac.compare_digest(sig, signature):
+            return HttpResponse(status=403)
+
+        try:
+            body = json.loads(text.decode('utf-8'))
+            assert body
+        except ValueError:
+            return HttpResponse('Invalid JSON body.', status=400)
+
+        return self.handle_hook(body)
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, *args, **kwargs):
+        return super(WebhookMixin, self).dispatch(*args, **kwargs)
+
+    def handle_hook(self, data):
+        pass
+
+
+class PullRequestWebhook(WebhookMixin, View):
+    def handle_hook(self, data):
+        action = data['action']
+        try:
+            local_repo = Repository.objects.get(identifier=data['repository']['id'])
+        except Repository.DoesNotExist as error:
+            # TODO: sentry capture this case
+            return HttpResponse(status=204)
+
+        if action == 'opened':
+            kwargs = {
+                'title': data['pull_request']['title'],
+                'number': data['pull_request']['number'],
+                'comments': data['pull_request']['comments'],
+                'state': data['pull_request']['state'],
+                'opened_by': data['pull_request']['user']['login'],
+                'base': data['pull_request']['base']['ref'],
+                'url': data['pull_request']['html_url'],
+                'branch': data['pull_request']['head']['ref'],
+                'identifier': data['pull_request']['id'],
+                'repository': local_repo
+            }
+            PullRequest.objects.create(**kwargs)
+
+        if action in ('closed', 'edited', 'reopened'):
+            try:
+                pull_request = PullRequest.objects.get(identifier=data['pull_request']['id'])
+            except PullRequest.DoesNotExist:
+                pass
+            else:
+                if action == 'closed':
+                    pull_request.state = 'closed'
+                    pull_request.save()
+                elif action == 'edited':
+                    pull_request.title = data['pull_request']['title']
+                    pull_request.save()
+                else:
+                    pull_request.state = 'open'
+                    pull_request.save()
+
+        return HttpResponse(status=204)
