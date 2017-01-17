@@ -1,9 +1,9 @@
 <div class="item" style="background-color: rgba(0,0,0,.03); border: 1px solid rgba(0,0,0,.05); padding: 20px;">
   <div style="color: grey;">
-    {% if pull_request.is_merged %}
-      <i class="left floated large violet icon ion-pull-request"></i>
-    {% else %}
+    {% if pull_request.state == 'open' %}
       <i class="left floated large green icon ion-pull-request"></i>
+    {% else %}
+      <i class="left floated large violet icon ion-pull-request"></i>
     {% endif %}
   </div>
   <div class="content">

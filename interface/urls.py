@@ -12,6 +12,7 @@ urlpatterns = [
     url(r'^projects/(?P<pk>[0-9]+)/delete$', views.ProjectDeleteView.as_view(), name='delete-project'),
     url(r'^projects/(?P<pk>[0-9]+)/merge$', views.ProjectMergeView.as_view(), name='merge-project'),
     url(r'^logout$', views.logout_user, name='logout'),
+    url(r'^webhook$', views.PullRequestWebhook.as_view(), name='webhook'),
 
     url(r'^api/repos/(?P<pk>[0-9]+)/pull_requests$', views.get_repo_pull_request_options),
     url(r'^api/pull_requests/(?P<pk>[0-9]+)/template', views.get_pull_request_template),
